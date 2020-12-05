@@ -9,4 +9,9 @@ before_build:
   - cmd: tools\build-googletest.bat 93748a946684defd1494d5585dbc912e451e83f8
 
 build_script:
-  - cmd: echo Hello World
+  - cmd: if "%APPVEYOR_BUILD_WORKER_IMAGE%"=="Visual Studio 2019" (pushd "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\" && call "VC\Auxiliary\Build\vcvars64.bat" && popd)
+  - cmd: >-
+      cl -MTd -EHa -Igoogletest\googletest\include tests\testrunner.cpp -link -LIBPATH:googletest\build\lib\Debug gtestd.lib -out:tests\testrunner.exe
+
+test_script:
+  - tests\testrunner.exe

@@ -11,9 +11,9 @@
 @ECHO Cloning googletest from %GOOGLETEST_REPOSITORY%
 @git clone %GOOGLETEST_REPOSITORY%
 @PUSHD googletest
+@git config advice.detachedHead false
 @ECHO Checking out commit "%1"
 @git checkout %1
-@ECHO Checking out commit "%1"
 @ECHO Creating build directory "%BUILD_DIRECTORY%"
 @MKDIR %BUILD_DIRECTORY%
 @PUSHD %BUILD_DIRECTORY%
@@ -22,6 +22,10 @@
 @POPD
 @POPD
 @POPD
+@ECHO Library directory:
+@DIR /s /b googletest\build\lib\Debug
+@ECHO INCLUDE directory:
+@DIR /s /b googletest\googletest\include\gtest
 
 :NORMALIZEPATH
   @SET NORMALIZEDPATH=%~f1
