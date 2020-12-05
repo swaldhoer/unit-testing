@@ -1,0 +1,12 @@
+version: 0.1.0-{build}
+
+image: Visual Studio 2019
+
+init:
+  - git config --global core.autocrlf input
+
+before_build:
+  - cmd: tools\build-googletest.bat 93748a946684defd1494d5585dbc912e451e83f8
+
+build_script:
+  - cmd: echo Hello World
