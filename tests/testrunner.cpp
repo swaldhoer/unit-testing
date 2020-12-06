@@ -2,9 +2,15 @@
 
 #include <gtest/gtest.h>
 
-TEST(module_name, dummy_test) {
-    ASSERT_EQ(1 + 1, 2);
+extern "C" {
+#include "super.h"
 }
+
+TEST(testrunner, test_add) {
+    int a = add(1,1);
+    ASSERT_EQ(a, 2);
+}
+
 
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);

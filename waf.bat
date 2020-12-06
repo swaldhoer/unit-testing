@@ -1,3 +1,3 @@
 @REM SPDX-License-Identifier: MIT
 
-python tools/waf %*
+@python tools/waf %*

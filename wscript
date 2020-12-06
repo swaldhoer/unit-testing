@@ -39,8 +39,6 @@ def configure(cnf):
         cnf.env.append_unique("INCLUDES", [gtest_config.get("include")])
     if gtest_config.get("lib", None):
         cnf.env.append_unique("LIBPATH_GTESTD", [gtest_config.get("lib")])
-    print(cnf.env.INCLUDES)
-    print(cnf.env.LIBPATH_GTESTD)
 
     cnf.check_cxx(header_name="gtest/gtest.h")
     cnf.check_cxx(lib="gtestd", use="GTESTD")
