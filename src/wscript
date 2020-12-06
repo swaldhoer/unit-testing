@@ -1,0 +1,10 @@
+# SPDX-License-Identifier: MIT
+
+
+def build(bld):
+    bld(
+        features="c cprogram",
+        includes="include",
+        source="main.c super.c",
+        target="main",
+    )

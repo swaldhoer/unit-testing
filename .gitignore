@@ -1,1 +1,7 @@
+.vs/
+.vscode/
+build/
 googletest/
+tools/waf-*.*.*-*
+tools/waf3-*.*.*-*
+.lock-waf_*_build
