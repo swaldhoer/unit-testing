@@ -2,18 +2,29 @@ version: 0.1.0-{build}
 
 image: Visual Studio 2019
 
+cache:
+  - '%LOCALAPPDATA%\pip\Cache'
+  - build\googletest-93748a946684defd1494d5585dbc912e451e83f8
+
 init:
   - git config --global core.autocrlf input
 
 environment:
-  PATH: C:\Python39-x64;$(PATH)
+  PATH: C:\Python38-x64;C:\Python38-x64\Scripts;$(PATH)
 
 before_build:
-  - cmd: tools\build-googletest.bat 93748a946684defd1494d5585dbc912e451e83f8
+  - cmd: python -m pip install --upgrade pip
+  - cmd: python -m pip install -r requirements.txt
 
 build_script:
-  - cmd: waf configure -v
+  - cmd: waf configure --build-googletest -v
   - cmd: waf build_bin -v
 
 test_script:
   - cmd: waf build_test -v
+
+after_test:
+  - cmd: python -m black . --check
+  - cmd: python -m pylint wscript
+  - cmd: python -m pylint src/wscript
+  - cmd: python -m pylint tests/wscript

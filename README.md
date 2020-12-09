@@ -9,11 +9,10 @@
    cd unit-testing
    ```
 
-1. Adapt path to googletest headers and library in ``tests/gtest.json``
 1. Configure, build and test the project
 
    ```sh
-   waf configure
+   waf configure --build-googletest
    waf build_bin
    waf build_test
    ```
