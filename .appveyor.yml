@@ -2,29 +2,45 @@ version: 0.1.0-{build}
 
 image: Visual Studio 2019
 
+skip_commits:
+  files:
+    - .github/*
+
 cache:
   - '%LOCALAPPDATA%\pip\Cache'
-  - build\googletest-93748a946684defd1494d5585dbc912e451e83f8
 
 init:
   - git config --global core.autocrlf input
 
 environment:
-  PATH: C:\Python38-x64;C:\Python38-x64\Scripts;$(PATH)
+  PATH: C:\Python38-x64;C:\Python38-x64\Scripts;$(USERPROFILE);$(PATH)
+  matrix:
+    - buildSystem: cmake
+      buildConfiguration: Debug
+    - buildSystem: cmake
+      buildConfiguration: Release
+    - buildSystem: bazel
+      buildConfiguration: Release # configuration is ignored for bazel builds
 
-before_build:
+install:
+  - ps: |
+      if ($env:buildSystem -eq "bazel") {
+        Push-Location $env:USERPROFILE
+        curl.exe -fsSL -o $env:USERPROFILE\bazel.exe https://github.com/bazelbuild/bazel/releases/download/3.7.1/bazel-3.7.1-windows-x86_64.exe
+        curl.exe -fsSL -o $env:USERPROFILE\ninja-win.zip https://github.com/ninja-build/ninja/releases/download/v1.10.2/ninja-win.zip
+        7z x -y ninja-win.zip
+        Pop-Location
+      }
   - cmd: python -m pip install --upgrade pip
   - cmd: python -m pip install -r requirements.txt
 
 build_script:
-  - cmd: waf configure --build-googletest -v
+  - cmd: waf configure --googletest-build --googletest-build-tool %buildSystem% --googletest-build-config %buildConfiguration% -v
   - cmd: waf build_bin -v
 
 test_script:
   - cmd: waf build_test -v
 
 after_test:
-  - cmd: python -m black . --check
-  - cmd: python -m pylint wscript
-  - cmd: python -m pylint src/wscript
-  - cmd: python -m pylint tests/wscript
+  - cmd: waf clean_bin -v
+  - cmd: waf clean_test -v

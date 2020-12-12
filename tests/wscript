@@ -5,12 +5,13 @@ from waflib.Tools import waf_unit_test
 
 def build(bld):
     if bld.env.CXX_NAME.lower() == "msvc":
-        bld.env.append_unique("CFLAGS", ["/EHa", "/MTd"])
-        bld.env.append_unique("CXXFLAGS", ["/EHa", "/MTd"])
+        bld.env.append_unique("CFLAGS", ["/EHa"] + bld.env.CFLAGS_TESTBUILD)
+        bld.env.append_unique("CXXFLAGS", ["/EHa"] + bld.env.CFLAGS_TESTBUILD)
+
     bld(
         features="c cxx cxxprogram test",
         source="../src/super.c testrunner.cpp",
-        use="GTESTD",
+        use=bld.env.GTEST_LIB_NAME,
         includes="../src/include",
         target="testrunner",
     )
