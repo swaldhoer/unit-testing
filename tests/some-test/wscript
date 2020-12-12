@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: MIT
+
+
+def build(bld):
+    bld(
+        features="c cxx cxxprogram test",
+        source="../../src/super.c testrunner.cpp",
+        use=bld.env.GTEST_LIB_NAME,
+        includes="../../src/include",
+        target="testrunner",
+    )

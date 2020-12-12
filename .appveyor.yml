@@ -14,6 +14,7 @@ init:
 
 environment:
   PATH: C:\Python38-x64;C:\Python38-x64\Scripts;$(USERPROFILE);$(PATH)
+  WAF_OPTS: -v -c yes
   matrix:
     - buildSystem: cmake
       buildConfiguration: Debug
@@ -35,12 +36,12 @@ install:
   - cmd: python -m pip install -r requirements.txt
 
 build_script:
-  - cmd: waf configure --googletest-build --googletest-build-tool %buildSystem% --googletest-build-config %buildConfiguration% -v
-  - cmd: waf build_bin -v
+  - cmd: waf configure --googletest-build --googletest-build-tool %buildSystem% --googletest-build-config %buildConfiguration% %WAF_OPTS%
+  - cmd: waf build_bin %WAF_OPTS%
 
 test_script:
-  - cmd: waf build_test -v
+  - cmd: waf build_test %WAF_OPTS%
 
 after_test:
-  - cmd: waf clean_bin -v
-  - cmd: waf clean_test -v
+  - cmd: waf clean_bin %WAF_OPTS%
+  - cmd: waf clean_test %WAF_OPTS%

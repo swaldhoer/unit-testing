@@ -18,6 +18,8 @@ jobs:
     - name: Run pylint
       run: |
         ./waf --help
-        python -m pylint wscript
         python -m pylint src/wscript
+        python -m pylint tests/some-test/wscript
         python -m pylint tests/wscript
+        python -m pylint tools/gtest.py
+        python -m pylint wscript

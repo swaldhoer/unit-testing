@@ -41,6 +41,7 @@ def make_msvc_and_win_paths_absolute(self):
 
 
 def options(opt):
+    opt.load("waf_unit_test")
     opt.parser.remove_option("--top")
     opt.parser.remove_option("--out")
     opt.load("compiler_c compiler_cxx")
