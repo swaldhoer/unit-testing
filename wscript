@@ -6,6 +6,7 @@ import git
 from waflib import Context, Errors, TaskGen, Utils, Logs
 from waflib.Build import BuildContext, CleanContext, InstallContext, UninstallContext
 
+
 for i in "bin test".split():
     for j in (BuildContext, CleanContext):
 
@@ -98,7 +99,9 @@ def configure(cnf):
         cnf.fatal("Only 64bit supported.")
 
     cnf.load("compiler_c compiler_cxx")
-
+    gtest_include = None
+    gtest_lib_dir = None
+    gtest_lib_name = "gtest"
     if cnf.options.googletest_build:
         gtest_clone_dir = os.path.join(
             cnf.path.get_bld().abspath(),
@@ -122,6 +125,7 @@ def configure(cnf):
             cnf.find_program("bazel")
             cnf.find_program("ninja")
             cnf.start_msg("Build googletest using bazel")
+            out = ""
             try:
                 (out, _) = cnf.cmd_and_log(
                     [cnf.env.BAZEL[0], "build", "-c", "opt", "//:gtest"],
@@ -136,7 +140,7 @@ def configure(cnf):
             if Logs.verbose:
                 print(out)
             gtest_include = os.path.join(gtest_clone_dir, "googletest", "include")
-            gtest_lib = os.path.join(gtest_clone_dir, gtest_build_dir)
+            gtest_lib_dir = os.path.join(gtest_clone_dir, gtest_build_dir)
             gtest_lib_name = "gtest"
             cnf.end_msg(True)
         elif cnf.options.googletest_build_tool == "cmake":
@@ -146,6 +150,7 @@ def configure(cnf):
             gtest_build_dir.mkdir()
             cnf.find_program("cmake")
             cnf.start_msg("Build googletest using cmake")
+            out = ""
             try:
                 (out, _) = cnf.cmd_and_log(
                     [
@@ -167,6 +172,7 @@ def configure(cnf):
             cnf.end_msg(True)
             cnf.find_program("msbuild")
             cnf.start_msg("Building googletest")
+            out = ""
             try:
                 (out, _) = cnf.cmd_and_log(
                     [
@@ -187,7 +193,7 @@ def configure(cnf):
             if Logs.verbose:
                 print(out)
             gtest_include = os.path.join(gtest_clone_dir, "googletest", "include")
-            gtest_lib = os.path.join(
+            gtest_lib_dir = os.path.join(
                 gtest_build_dir.abspath(), "lib", cnf.options.googletest_build_config
             )
             if cnf.options.googletest_build_config.lower() == "debug":
@@ -200,18 +206,16 @@ def configure(cnf):
         if os.environ.get("GTEST_INC_PATH", None):
             gtest_include = os.environ.get("GTEST_INC_PATH")
         if os.environ.get("GTEST_LIB_PATH", None):
-            gtest_lib = os.environ.get("GTEST_LIB_PATH")
+            gtest_lib_dir = os.environ.get("GTEST_LIB_PATH")
         if os.environ.get("GTEST_LIB_NAME", None):
             gtest_lib_name = os.environ.get("GTEST_LIB_NAME")
-    else:
-        gtest_include = ""
-        gtest_lib = ""
-        gtest_lib_name = "gtest"
-    cnf.env.append_unique("INCLUDES", [gtest_include])
-    cnf.env.append_unique(f"LIBPATH_{gtest_lib_name.upper()}", [gtest_lib])
+    if gtest_include:
+        cnf.env.append_unique("INCLUDES", [gtest_include])
+    if gtest_lib_dir:
+        cnf.env.append_unique(f"LIBPATH_{gtest_lib_name.upper()}", [gtest_lib_dir])
 
+    header = os.path.join("gtest", "gtest.h")
     try:
-        header = os.path.join("gtest", "gtest.h")
         cnf.check_cxx(header_name=header)
     except Errors.ConfigurationError:
         cnf.fatal(
