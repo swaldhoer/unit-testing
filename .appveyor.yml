@@ -4,7 +4,7 @@ image: Visual Studio 2019
 
 skip_commits:
   files:
-    - .github/*
+    - .github/workflows/*
 
 cache:
   - '%LOCALAPPDATA%\pip\Cache'

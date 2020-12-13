@@ -1,25 +1,28 @@
 name: Pylint
 
-on: [push]
+on:
+  push:
+    paths-ignore:
+      - .github/workflows/build*.yml
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - name: Set up Python 3.8
-      uses: actions/setup-python@v1
-      with:
-        python-version: 3.8
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        python -m pip install -r requirements.txt
-    - name: Run pylint
-      run: |
-        ./waf --help
-        python -m pylint src/wscript
-        python -m pylint tests/some-test/wscript
-        python -m pylint tests/wscript
-        python -m pylint tools/gtest.py
-        python -m pylint wscript
+      - uses: actions/checkout@v2
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.8
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+      - name: Run pylint
+        run: |
+          ./waf --help
+          python -m pylint src/wscript
+          python -m pylint tests/some-test/wscript
+          python -m pylint tests/wscript
+          python -m pylint tools/gtest.py
+          python -m pylint wscript
