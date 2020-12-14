@@ -8,6 +8,7 @@ import git
 from waflib import Context, Errors, TaskGen, Utils, Logs
 from waflib.Build import BuildContext, CleanContext, InstallContext, UninstallContext
 
+Context.Context.line_just = 58
 
 for i in "bin test".split():
     for j in (BuildContext, CleanContext):
@@ -231,6 +232,60 @@ def configure(cnf):
     cnf.env.GTEST_LIB_NAME = gtest_lib_name.upper()
     cnf.check_cxx(stlib=gtest_lib_name, use=cnf.env.GTEST_LIB_NAME)
 
+    def full_test(bld):
+        header = bld.srcnode.make_node("test.h")
+        header.write(
+            "#ifndef SUPER_H_\n#define SUPER_H_\n"
+            "int add(int a, int b);\n"
+            "#endif /* SUPER_H_ */\n",
+            "w",
+            encoding="utf-8",
+        )
+        sources = []
+        sources.append(bld.srcnode.make_node("test.c"))
+        sources[0].write(
+            '#include "test.h"\nint add(int a, int b) {\nreturn a + b;\n}\n',
+            "w",
+            encoding="utf-8",
+        )
+        sources.append(bld.srcnode.make_node("testrunner.cpp"))
+        sources[1].write(
+            "#include <gtest/gtest.h>\n"
+            "\n"
+            'extern "C" {\n'
+            f'#include "{header}"\n'
+            "}\n"
+            "\n"
+            "TEST(testrunner, test_add) {\n"
+            "    int a = add(1,1);\n"
+            "    ASSERT_EQ(a, 3);\n"
+            "}\n"
+            "\n"
+            "\n"
+            "int main(int argc, char **argv) {\n"
+            "    ::testing::InitGoogleTest(&argc, argv);\n"
+            "    return RUN_ALL_TESTS();\n"
+            "}\n",
+            "w",
+            encoding="utf-8",
+        )
+        cflags = []
+        cxxflags = []
+
+        if bld.env.CXX_NAME.lower() == "msvc":
+            cflags = ["/EHa"] + bld.env.CFLAGS_TESTBUILD
+            cxxflags = ["/EHa"] + bld.env.CXXFLAGS_TESTBUILD
+        bld(
+            features="c cxx cxxprogram",
+            source=sources,
+            use=bld.env.GTEST_LIB_NAME,
+            includes=".",
+            cflags=cflags,
+            cxxflags=cxxflags,
+            target="testrunner",
+        )
+
+    cnf.start_msg("Setting C/CXX flags for testing")
     if cnf.env.GOOGLETEST_BUILD_TOOL == "bazel":
         cnf.env.append_unique("CFLAGS_TESTBUILD", ["/MD"])
         cnf.env.append_unique("CXXFLAGS_TESTBUILD", ["/MD"])
@@ -241,6 +296,13 @@ def configure(cnf):
         elif cnf.env.GOOGLETEST_BUILD_CONFIG == "release":
             cnf.env.append_unique("CFLAGS_TESTBUILD", ["/MT"])
             cnf.env.append_unique("CXXFLAGS_TESTBUILD", ["/MT"])
+    cnf.end_msg(True)
+
+    cnf.check(
+        build_fun=full_test,
+        execute=True,
+        msg=f"Checking for static library {gtest_lib_name} and header {header}",
+    )
 
 
 def build(bld):

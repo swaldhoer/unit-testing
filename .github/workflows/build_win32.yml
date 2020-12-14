@@ -18,10 +18,22 @@ jobs:
         include:
           - buildSystem: cmake
             buildConfiguration: Debug
+            googletestVersion: 93748a946684defd1494d5585dbc912e451e83f8
+          - buildSystem: cmake
+            buildConfiguration: Debug
+            googletestVersion: 18f8200e3079b0e54fa00cb7ac55d4c39dcf6da6
           - buildSystem: cmake
             buildConfiguration: Release
+            googletestVersion: 93748a946684defd1494d5585dbc912e451e83f8
+          - buildSystem: cmake
+            buildConfiguration: Release
+            googletestVersion: 18f8200e3079b0e54fa00cb7ac55d4c39dcf6da6
           - buildSystem: bazel
             buildConfiguration: Release # configuration is ignored for bazel builds
+            googletestVersion: 93748a946684defd1494d5585dbc912e451e83f8
+          - buildSystem: bazel
+            buildConfiguration: Release # configuration is ignored for bazel builds
+            googletestVersion: 18f8200e3079b0e54fa00cb7ac55d4c39dcf6da6
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python 3.8
@@ -41,7 +53,7 @@ jobs:
         if: matrix.buildSystem != 'bazel'
         uses: microsoft/setup-msbuild@v1.0.2
       - name: Project configuration
-        run: .\waf.bat configure --googletest-build --googletest-build-tool ${{ matrix.buildSystem }} --googletest-build-config ${{ matrix.buildConfiguration }} ${{ env.WAF_OPTS }}
+        run: .\waf.bat configure --googletest-build --googletest-version ${{ matrix.googletestVersion }} --googletest-build-tool ${{ matrix.buildSystem }} --googletest-build-config ${{ matrix.buildConfiguration }} ${{ env.WAF_OPTS }}
       - name: Project build
         run: .\waf.bat build_bin ${{ env.WAF_OPTS }}
       - name: Project test
