@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: MIT
+
 import os
 import platform
 
@@ -151,14 +153,17 @@ def configure(cnf):
             cnf.find_program("cmake")
             cnf.start_msg("Build googletest using cmake")
             out = ""
-            try:
-                (out, _) = cnf.cmd_and_log(
+            cmake_args = [".."]
+            if Utils.unversioned_sys_platform() == "win32":
+                cmake_args.extend(
                     [
-                        cnf.env.CMAKE[0],
-                        "..",
                         "-DCMAKE_GENERATOR_PLATFORM=x64",
                         f"-DCMAKE_CONFIGURATION_TYPES={cnf.options.googletest_build_config}",
-                    ],
+                    ]
+                )
+            try:
+                (out, _) = cnf.cmd_and_log(
+                    cnf.env.CMAKE + cmake_args,
                     output=Context.BOTH,
                     cwd=gtest_build_dir.abspath(),
                 )
@@ -201,7 +206,7 @@ def configure(cnf):
             elif cnf.options.googletest_build_config.lower() == "release":
                 gtest_lib_name = "gtest"
 
-        cnf.end_msg(True)
+            cnf.end_msg(True)
     elif cnf.options.googletest_build_tool == "no-build":
         if os.environ.get("GTEST_INC_PATH", None):
             gtest_include = os.environ.get("GTEST_INC_PATH")
@@ -224,7 +229,7 @@ def configure(cnf):
         )
 
     cnf.env.GTEST_LIB_NAME = gtest_lib_name.upper()
-    cnf.check_cxx(lib=gtest_lib_name, use=cnf.env.GTEST_LIB_NAME)
+    cnf.check_cxx(stlib=gtest_lib_name, use=cnf.env.GTEST_LIB_NAME)
 
     if cnf.env.GOOGLETEST_BUILD_TOOL == "bazel":
         cnf.env.append_unique("CFLAGS_TESTBUILD", ["/MD"])

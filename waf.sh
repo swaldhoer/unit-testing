@@ -2,4 +2,4 @@
 
 # SPDX-License-Identifier: MIT
 
-python tools/waf "$@"
+python3 tools/waf "$@"

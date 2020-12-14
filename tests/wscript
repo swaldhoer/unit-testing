@@ -6,6 +6,6 @@ import gtest
 def build(bld):
     if bld.env.CXX_NAME.lower() == "msvc":
         bld.env.append_unique("CFLAGS", ["/EHa"] + bld.env.CFLAGS_TESTBUILD)
-        bld.env.append_unique("CXXFLAGS", ["/EHa"] + bld.env.CFLAGS_TESTBUILD)
+        bld.env.append_unique("CXXFLAGS", ["/EHa"] + bld.env.CXXFLAGS_TESTBUILD)
     bld.recurse("some-test")
     bld.add_post_fun(gtest.summary)

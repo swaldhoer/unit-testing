@@ -3,5 +3,7 @@
 __pycache__
 build/
 tools/waf-*.*.*-*
+tools/.waf-*.*.*-*
 tools/waf3-*.*.*-*
+tools/.waf3-*.*.*-*
 .lock-waf_*_build
