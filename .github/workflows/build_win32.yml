@@ -44,11 +44,14 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
-      - name: Install Bazel and Ninja
+      - uses: seanmiddleditch/gha-setup-ninja@v3
         if: matrix.buildSystem == 'bazel'
-        run: |
-          choco install bazel --version 3.7.1 --no-progress
-          choco install ninja --version 1.10.2 --no-progress
+        with:
+          version: 1.10.2
+      - uses: abhinavsingh/setup-bazel@v3
+        if: matrix.buildSystem == 'bazel'
+        with:
+          version: 3.7.1
       - name: Add msbuild to PATH
         if: matrix.buildSystem != 'bazel'
         uses: microsoft/setup-msbuild@v1.0.2
