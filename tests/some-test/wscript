@@ -7,5 +7,6 @@ def build(bld):
         source="../../src/super.c testrunner.cpp",
         use=bld.env.GTEST_LIB_NAME,
         includes="../../src/include",
+        ldflags=bld.env.LDFLAGS_TESTBUILD,
         target="testrunner",
     )

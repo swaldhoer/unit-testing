@@ -87,7 +87,7 @@ def options(opt):
     gbo.add_option(
         "--googletest-version",
         dest="googletest_version",
-        default="93748a946684defd1494d5585dbc912e451e83f8",
+        default="18f8200e3079b0e54fa00cb7ac55d4c39dcf6da6",
         action="store",
         help="Commit of googletest to be built",
     )
@@ -96,7 +96,7 @@ def options(opt):
 def configure(cnf):
     if " " in cnf.path.abspath():
         cnf.fatal("Project path must not contain spaces.")
-    if not Utils.is_win32:
+    if not Utils.unversioned_sys_platform() in ["win32"]:
         cnf.fatal("Operating system currently not supported.")
     if not platform.architecture()[0].startswith("64"):
         cnf.fatal("Only 64bit supported.")
@@ -153,7 +153,6 @@ def configure(cnf):
             gtest_build_dir.mkdir()
             cnf.find_program("cmake")
             cnf.start_msg("Build googletest using cmake")
-            out = ""
             cmake_args = [".."]
             if Utils.unversioned_sys_platform() == "win32":
                 cmake_args.extend(
@@ -162,6 +161,7 @@ def configure(cnf):
                         f"-DCMAKE_CONFIGURATION_TYPES={cnf.options.googletest_build_config}",
                     ]
                 )
+            out = ""
             try:
                 (out, _) = cnf.cmd_and_log(
                     cnf.env.CMAKE + cmake_args,
@@ -173,30 +173,28 @@ def configure(cnf):
                     print(err.stdout)
                 if hasattr(err, "stderr"):
                     cnf.fatal(err.stderr)
-            if Logs.verbose:
+            if Logs.verbose and out:
                 print(out)
             cnf.end_msg(True)
-            cnf.find_program("msbuild")
             cnf.start_msg("Building googletest")
+            if Utils.unversioned_sys_platform() == "win32":
+                cnf.find_program("msbuild")
+                cwd = gtest_build_dir.abspath()
+                cmd = cnf.env.MSBUILD + [
+                    "googletest-distribution.sln",
+                    "/t:Build",
+                    f"/p:Configuration={cnf.options.googletest_build_config}",
+                    "/p:Platform=x64",
+                ]
             out = ""
             try:
-                (out, _) = cnf.cmd_and_log(
-                    [
-                        cnf.env.MSBUILD[0],
-                        "googletest-distribution.sln",
-                        "/t:Build",
-                        f"/p:Configuration={cnf.options.googletest_build_config}",
-                        "/p:Platform=x64",
-                    ],
-                    output=Context.BOTH,
-                    cwd=gtest_build_dir.abspath(),
-                )
+                (out, _) = cnf.cmd_and_log(cmd, output=Context.BOTH, cwd=cwd)
             except Errors.WafError as err:
                 if hasattr(err, "stdout"):
                     print(err.stdout)
                 if hasattr(err, "stderr"):
                     cnf.fatal(err.stderr)
-            if Logs.verbose:
+            if Logs.verbose and out:
                 print(out)
             gtest_include = os.path.join(gtest_clone_dir, "googletest", "include")
             gtest_lib_dir = os.path.join(
@@ -215,6 +213,7 @@ def configure(cnf):
             gtest_lib_dir = os.environ.get("GTEST_LIB_PATH")
         if os.environ.get("GTEST_LIB_NAME", None):
             gtest_lib_name = os.environ.get("GTEST_LIB_NAME")
+
     if gtest_include:
         cnf.env.append_unique("INCLUDES", [gtest_include])
     if gtest_lib_dir:
@@ -231,6 +230,15 @@ def configure(cnf):
 
     cnf.env.GTEST_LIB_NAME = gtest_lib_name.upper()
     cnf.check_cxx(stlib=gtest_lib_name, use=cnf.env.GTEST_LIB_NAME)
+
+    if not Utils.is_win32:
+        cnf.check_cxx(
+            features="cxx cxxprogram",
+            fragment="int main() { return 0; }\n",
+            ldflags="-pthread",
+            msg="Checking for pthread",
+        )
+        cnf.env.append_unique("LDFLAGS_TESTBUILD", ["-pthread"])
 
     def full_test(bld):
         header = bld.srcnode.make_node("test.h")
@@ -282,6 +290,7 @@ def configure(cnf):
             includes=".",
             cflags=cflags,
             cxxflags=cxxflags,
+            ldflags=bld.env.LDFLAGS_TESTBUILD,
             target="testrunner",
         )
 
