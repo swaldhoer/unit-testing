@@ -1,5 +1,7 @@
 name: clang-format
+
 on: push
+
 jobs:
   clang-format-check:
     name: Check C/C++ sources by clang-format

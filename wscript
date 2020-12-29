@@ -96,7 +96,7 @@ def options(opt):
 def configure(cnf):
     if " " in cnf.path.abspath():
         cnf.fatal("Project path must not contain spaces.")
-    if not Utils.unversioned_sys_platform() in ["win32"]:
+    if not Utils.unversioned_sys_platform() in ["win32", "linux"]:
         cnf.fatal("Operating system currently not supported.")
     if not platform.architecture()[0].startswith("64"):
         cnf.fatal("Only 64bit supported.")
@@ -167,6 +167,21 @@ def configure(cnf):
                         "-DBUILD_GMOCK=ON",
                     ]
                 )
+            elif Utils.unversioned_sys_platform() == "linux":
+                cmake_args.extend(
+                    [
+                        "-GUnix Makefiles",
+                        "-Dgtest_build_samples=ON",
+                        "-Dgtest_build_tests=ON",
+                        "-Dgmock_build_tests=ON",
+                        "-Dcxx_no_exception=OFF",
+                        "-Dcxx_no_rtti=OFF",
+                        "-DCMAKE_COMPILER_IS_GNUCXX=OFF",
+                        "-DCMAKE_CXX_FLAGS=-std=c++11 -Wdeprecated",
+                        f"-DCMAKE_BUILD_TYPE={cnf.options.googletest_build_config}",
+                        "-DBUILD_GMOCK=ON",
+                    ]
+                )
             out = ""
             try:
                 (out, _) = cnf.cmd_and_log(
@@ -192,6 +207,11 @@ def configure(cnf):
                     f"/p:Configuration={cnf.options.googletest_build_config}",
                     "/p:Platform=x64",
                 ]
+            elif Utils.unversioned_sys_platform() == "linux":
+                cnf.find_program("make")
+                cwd = gtest_build_dir.abspath()
+                cmd = cnf.env.MAKE
+
             out = ""
             try:
                 (out, _) = cnf.cmd_and_log(cmd, output=Context.BOTH, cwd=cwd)
@@ -206,9 +226,6 @@ def configure(cnf):
             gtest_lib_dir = os.path.join(
                 gtest_build_dir.abspath(), "lib", cnf.options.googletest_build_config
             )
-            gmock_lib_dir = os.path.join(
-                gtest_build_dir.abspath(), "lib", cnf.options.googletest_build_config
-            )
             if cnf.options.googletest_build_config.lower() == "debug":
                 gtest_lib_name = "gtestd"
                 gmock_lib_name = "gmockd"
@@ -216,6 +233,29 @@ def configure(cnf):
                 gtest_lib_name = "gtest"
                 gmock_lib_name = "gmock"
             gmock_include = os.path.join(gtest_clone_dir, "googlemock", "include")
+            if Utils.unversioned_sys_platform() == "win32":
+                gtest_include = os.path.join(gtest_clone_dir, "googletest", "include")
+                gtest_lib_dir = os.path.join(
+                    gtest_build_dir.abspath(),
+                    "lib",
+                    cnf.options.googletest_build_config,
+                )
+                gmock_lib_dir = os.path.join(
+                    gtest_build_dir.abspath(),
+                    "lib",
+                    cnf.options.googletest_build_config,
+                )
+            elif Utils.unversioned_sys_platform() == "linux":
+                gtest_include = os.path.join(gtest_clone_dir, "googletest", "include")
+                gtest_lib_dir = os.path.join(gtest_build_dir.abspath(), "lib")
+                gmock_lib_dir = os.path.join(gtest_build_dir.abspath(), "lib")
+                if cnf.options.googletest_build_config.lower() == "debug":
+                    gtest_lib_name = "gtestd"
+                    gmock_lib_name = "gmockd"
+                elif cnf.options.googletest_build_config.lower() == "release":
+                    gtest_lib_name = "gtest"
+                    gmock_lib_name = "gmock"
+
             cnf.end_msg(True)
     elif cnf.options.googletest_build_tool == "no-build":
         if os.environ.get("GTEST_INC_PATH", None):

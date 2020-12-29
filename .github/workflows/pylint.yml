@@ -1,9 +1,6 @@
 name: Pylint
 
-on:
-  push:
-    paths-ignore:
-      - .github/workflows/build*.yml
+on: push
 
 jobs:
   build:
