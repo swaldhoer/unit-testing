@@ -105,6 +105,9 @@ def configure(cnf):
     gtest_include = None
     gtest_lib_dir = None
     gtest_lib_name = "gtest"
+    gmock_lib_dir = None
+    gmock_lib_name = None
+    gmock_include = None
     if cnf.options.googletest_build:
         gtest_clone_dir = os.path.join(
             cnf.path.get_bld().abspath(),
@@ -145,8 +148,10 @@ def configure(cnf):
             gtest_include = os.path.join(gtest_clone_dir, "googletest", "include")
             gtest_lib_dir = os.path.join(gtest_clone_dir, gtest_build_dir)
             gtest_lib_name = "gtest"
+            gmock_include = os.path.join(gtest_clone_dir, "googlemock", "include")
             cnf.end_msg(True)
         elif cnf.options.googletest_build_tool == "cmake":
+            cnf.msg("Building", str(cnf.options.googletest_build_config))
             cnf.env.BUILD_TOOL = "cmake"
             cnf.env.BUILD_TYPE = cnf.options.googletest_build_config.lower()
             gtest_build_dir = cnf.root.make_node(os.path.join(gtest_clone_dir, "build"))
@@ -159,6 +164,7 @@ def configure(cnf):
                     [
                         "-DCMAKE_GENERATOR_PLATFORM=x64",
                         f"-DCMAKE_CONFIGURATION_TYPES={cnf.options.googletest_build_config}",
+                        "-DBUILD_GMOCK=ON",
                     ]
                 )
             out = ""
@@ -200,11 +206,16 @@ def configure(cnf):
             gtest_lib_dir = os.path.join(
                 gtest_build_dir.abspath(), "lib", cnf.options.googletest_build_config
             )
+            gmock_lib_dir = os.path.join(
+                gtest_build_dir.abspath(), "lib", cnf.options.googletest_build_config
+            )
             if cnf.options.googletest_build_config.lower() == "debug":
                 gtest_lib_name = "gtestd"
+                gmock_lib_name = "gmockd"
             elif cnf.options.googletest_build_config.lower() == "release":
                 gtest_lib_name = "gtest"
-
+                gmock_lib_name = "gmock"
+            gmock_include = os.path.join(gtest_clone_dir, "googlemock", "include")
             cnf.end_msg(True)
     elif cnf.options.googletest_build_tool == "no-build":
         if os.environ.get("GTEST_INC_PATH", None):
@@ -213,23 +224,42 @@ def configure(cnf):
             gtest_lib_dir = os.environ.get("GTEST_LIB_PATH")
         if os.environ.get("GTEST_LIB_NAME", None):
             gtest_lib_name = os.environ.get("GTEST_LIB_NAME")
+        if os.environ.get("GMOCK_INC_PATH", None):
+            gmock_include = os.environ.get("GMOCK_INC_PATH")
+        if os.environ.get("GMOCK_LIB_PATH", None):
+            gmock_include = os.environ.get("GMOCK_LIB_PATH")
+        if os.environ.get("GMOCK_LIB_NAME", None):
+            gmock_include = os.environ.get("GMOCK_LIB_NAME")
 
     if gtest_include:
         cnf.env.append_unique("INCLUDES", [gtest_include])
     if gtest_lib_dir:
         cnf.env.append_unique(f"LIBPATH_{gtest_lib_name.upper()}", [gtest_lib_dir])
+    if gmock_include:
+        cnf.env.append_unique("INCLUDES", [gmock_include])
+    if gmock_lib_dir:
+        cnf.env.append_unique(f"LIBPATH_{gmock_lib_name.upper()}", [gmock_lib_dir])
 
-    header = os.path.join("gtest", "gtest.h")
+    gtest_header = os.path.join("gtest", "gtest.h")
     try:
-        cnf.check_cxx(header_name=header)
+        cnf.check_cxx(header_name=gtest_header)
     except Errors.ConfigurationError:
         cnf.fatal(
-            f'Could not find googletest header "{header}".\n'
+            f'Could not find googletest header "{gtest_header}".\n'
             'Use option "--googletest-build" to build the googletest.'
         )
 
+    gmock_header = os.path.join("gmock", "gmock.h")
+    cnf.check_cxx(header_name=gmock_header)
+
     cnf.env.GTEST_LIB_NAME = gtest_lib_name.upper()
     cnf.check_cxx(stlib=gtest_lib_name, use=cnf.env.GTEST_LIB_NAME)
+
+    if cnf.env.GOOGLETEST_BUILD_TOOL == "cmake":
+        cnf.env.GMOCK_LIB_NAME = gmock_lib_name.upper()
+        cnf.check_cxx(stlib=gmock_lib_name, use=cnf.env.GMOCK_LIB_NAME)
+    else:
+        cnf.env.GMOCK_LIB_NAME = ""
 
     if not Utils.is_win32:
         cnf.check_cxx(
@@ -310,8 +340,9 @@ def configure(cnf):
     cnf.check(
         build_fun=full_test,
         execute=True,
-        msg=f"Checking for static library {gtest_lib_name} and header {header}",
+        msg=f"Checking for static library {gtest_lib_name} and header {gtest_header}",
     )
+    cnf.env.APPNAME = APPNAME
 
 
 def build(bld):

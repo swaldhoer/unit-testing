@@ -22,7 +22,8 @@ jobs:
         run: |
           ./waf.sh --help
           python -m pylint --rcfile=pyproject.toml src/wscript
-          python -m pylint --rcfile=pyproject.toml tests/some-test/wscript
+          python -m pylint --rcfile=pyproject.toml tests/gtest-test/wscript
+          python -m pylint --rcfile=pyproject.toml tests/gmock-test/wscript
           python -m pylint --rcfile=pyproject.toml tests/wscript
           python -m pylint --rcfile=pyproject.toml tools/gtest.py
           python -m pylint --rcfile=pyproject.toml wscript

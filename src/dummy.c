@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: MIT */
 
-#include "super.h"
+#include "dummy.h"
 
-int add(int a, int b) {
+int dummyFunction(int a, int b) {
     return a + b;
 }

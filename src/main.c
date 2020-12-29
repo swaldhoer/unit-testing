@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: MIT */
 
-#include "super.h"
+#include "add.h"
 
 int main(int argc, char **argv) {
     add(2, 2);

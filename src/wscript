@@ -2,9 +2,12 @@
 
 
 def build(bld):
+    bld(features="c", includes="include", source="main.c", target="main")
+    bld(features="c", includes="include", source="add.c", target="add")
+    bld(features="c", includes="include", source="dummy.c", target="dummy")
     bld(
         features="c cprogram",
         includes="include",
-        source="main.c super.c",
-        target="main",
+        use="main add dummy",
+        target=bld.env.APPNAME,
     )

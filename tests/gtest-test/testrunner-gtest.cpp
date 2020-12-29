@@ -3,14 +3,13 @@
 #include <gtest/gtest.h>
 
 extern "C" {
-#include "super.h"
+#include "dummy.h"
 }
 
 TEST(testrunner, test_add) {
-    int a = add(1,1);
-    ASSERT_EQ(a, 2);
+    int a = dummyFunction(1, 1);
+    ASSERT_EQ(2, a);
 }
-
 
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
