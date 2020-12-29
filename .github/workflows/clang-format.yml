@@ -1,0 +1,12 @@
+name: clang-format
+on: push
+jobs:
+  clang-format-check:
+    name: Check C/C++ sources by clang-format
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run clang-format
+        run: |
+          sourceFiles=$( find . -path ./build -prune -false -o \( -name "*.h" -or -name "*.c" -or -name "*.cpp" -or -name "*.hpp" \) -type f )
+          echo $sourceFiles | xargs clang-format-10 --verbose --dry-run -Werror
