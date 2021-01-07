@@ -48,7 +48,7 @@ jobs:
         with:
           version: 3.7.1
       - name: Project configuration
-        run: ./waf.sh configure --googletest-build --googletest-version ${{ matrix.googletestVersion }} --googletest-build-tool ${{ matrix.buildSystem }} --googletest-build-config ${{ matrix.buildConfiguration }} ${{ env.WAF_OPTS }}
+        run: ./waf.sh configure --googletest-bootstrap --googletest-version ${{ matrix.googletestVersion }} --googletest-build-tool ${{ matrix.buildSystem }} --googletest-build-config ${{ matrix.buildConfiguration }} ${{ env.WAF_OPTS }}
       - name: Project build
         run: ./waf.sh build_bin ${{ env.WAF_OPTS }}
       - name: Project test
