@@ -1,0 +1,36 @@
+{
+    "env": {
+        "projectIncludePath": [
+            "${workspaceFolder}/src/**",
+            "${workspaceFolder}/tests/**"
+        ],
+        "googletestVersion": "18f8200e3079b0e54fa00cb7ac55d4c39dcf6da6"
+    },
+    "configurations": [
+        {
+            "name": "Win32",
+            "includePath": [
+                "${projectIncludePath}",
+                "${env:USERPROFILE}/googletest/googletest-${env:googletestVersion}/googletest/include",
+                "${env:USERPROFILE}/googletest/googletest-${env:googletestVersion}/googlemock/include"
+            ],
+            "cStandard": "c11",
+            "cppStandard": "c++14",
+            "intelliSenseMode": "msvc-x64"
+        },
+        {
+            "name": "Linux",
+            "includePath": [
+                "${projectIncludePath}",
+                "~/googletest/googletest-${env:googletestVersion}/googletest/include",
+                "~/googletest/googletest-${env:googletestVersion}/googlemock/include"
+            ],
+            "defines": [],
+            "compilerPath": "/usr/bin/gcc",
+            "cStandard": "c11",
+            "cppStandard": "c++14",
+            "intelliSenseMode": "gcc-x64"
+        }
+    ],
+    "version": 4
+}

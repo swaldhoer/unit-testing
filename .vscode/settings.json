@@ -1,0 +1,64 @@
+{
+    "files.associations": {
+        "wscript": "python"
+    },
+    "editor.formatOnSave": true,
+    "python.formatting.provider": "black",
+    "python.linting.lintOnSave": true,
+    "python.linting.enabled": true,
+    "python.linting.pylintArgs": [
+        "--rcfile=pyproject.toml"
+    ],
+    "cSpell.words": [
+        "unversioned",
+    ],
+    "cSpell.ignoreWords": [
+        "appname",
+        "cflags",
+        "cxxflags",
+        "cxxprogram",
+        "dcxx",
+        "dcmake",
+        "dgtest",
+        "dgmock",
+        "distclean",
+        "ftest",
+        "fprofile",
+        "gcov",
+        "gcovr",
+        "googletest",
+        "gmock",
+        "gmockd",
+        "gtest",
+        "gtestd",
+        "lcov",
+        "ldflags",
+        "pylint",
+        "pthread",
+        "rcfile",
+        "spdx",
+        "stlib",
+        "waflib",
+        "wscript",
+        // tools and programs
+        "bazel",
+        "cmake",
+        "msbuild",
+    ],
+    "cSpell.language": "en",
+    "cSpell.dictionaries": [
+        "cpp",
+        "python"
+    ],
+    "cSpell.ignorePaths": [
+        "**/package-lock.json",
+        "**/node_modules/**",
+        "**/vscode-extension/**",
+        "**/.git/objects/**",
+        ".github/workflows/*.yml",
+        ".vscode",
+        ".vscode-insiders",
+        "tools/waf3*",
+        "tools/.waf3*"
+    ]
+}
