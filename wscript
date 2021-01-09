@@ -311,6 +311,7 @@ def configure(cnf):
         cnf.fatal("Only 64bit supported.")
 
     cnf.load("compiler_c compiler_cxx")
+    cnf.load("gtest")
 
     if cnf.options.googletest_bootstrap:
         dep = bootstrap()

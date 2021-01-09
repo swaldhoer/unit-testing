@@ -6,7 +6,6 @@ def build(bld):
         features="c cxx cxxprogram test",
         source="../../src/dummy.c testrunner-gtest.cpp",
         includes="../../src/include",
-        idx=1,
         use=bld.env.GTEST_LIB_NAME,
         ldflags=bld.env.LDFLAGS_TESTBUILD,
         target=f"{bld.env.APPNAME.lower()}-testrunner-gtest",

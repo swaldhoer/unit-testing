@@ -8,7 +8,6 @@ def build(bld):
         features="c cxx cxxprogram test",
         source="../../src/add.c testrunner-gmock.cpp",
         includes="../../src/include",
-        idx=2,
         use=Utils.to_list(bld.env.GTEST_LIB_NAME)
         + Utils.to_list(bld.env.GMOCK_LIB_NAME),
         ldflags=bld.env.LDFLAGS_TESTBUILD,
