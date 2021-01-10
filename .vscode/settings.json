@@ -41,6 +41,7 @@
         "rcfile",
         "spdx",
         "stlib",
+        "tgen",
         "waflib",
         "wscript",
         // tools and programs

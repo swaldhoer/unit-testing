@@ -22,3 +22,10 @@ def build(bld):
         bld.env.append_unique("STLIB", ["gcov"])
     bld.recurse(["gtest-test", "gmock-test"])
     bld.add_post_fun(gtest.summary)
+    bld(
+        features="gcov_gcovr",
+        input_tasks=[
+            f"{bld.env.APPNAME.lower()}-testrunner-gmock",
+            f"{bld.env.APPNAME.lower()}-testrunner-gtest",
+        ],
+    )
