@@ -31,15 +31,20 @@ def summary(bld):
 def configure(cnf):
     if Utils.unversioned_sys_platform() == "win32":
         cnf.find_program("python", var="PYTHON")
+        if cnf.env.CXX_NAME.lower() == "msvc":
+            pass
+        elif cnf.env.CXX_NAME.lower() == "gcc":
+            cnf.find_program("gcov", var="GCOV")
+            # cnf.find_program("gcovr", var="GCOVR")
     elif Utils.unversioned_sys_platform() == "linux":
+        cnf.find_program("python3", var="PYTHON")
         cnf.find_program("gcov", var="GCOV")
         cnf.find_program("gcovr", var="GCOVR")
-        cnf.find_program("python3", var="PYTHON")
 
 
 @feature("gcov_gcovr")
 def run_gcov(self):
-    if not Utils.is_win32:
+    if not Utils.is_win32 or self.env.CXX_NAME == "gcc":
         inputs = []
         for tg_name in self.input_tasks:
             tg = self.bld.get_tgen_by_name(tg_name)
@@ -154,6 +159,8 @@ class Gcov(Task.Task):
 
             # find files produced by gcov
             for line in out.splitlines():
+                if "removing" in line.lower():
+                    continue
                 if ".gcov" in line:
                     match = re.search(r"'(.*.gcov)'", line)
                     if match.group(1):

@@ -1,0 +1,56 @@
+name: Windows MinGW64 Build
+
+on: push
+
+env:
+  WAF_OPTS: -v -c yes
+
+jobs:
+  build:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        include:
+          - buildSystem: cmake
+            buildConfiguration: Debug
+            googletestVersion: 389cb68b87193358358ae87cc56d257fd0d80189
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.8
+      - name: Install pip dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+      - name: Install MSYS2 dependencies
+        run: |
+          C:\msys64\msys2_shell.cmd -c "pacman -Syu --noconfirm"
+          C:\msys64\msys2_shell.cmd -c "pacman -Su --noconfirm"
+          C:\msys64\msys2_shell.cmd -c "pacman -S mingw-w64-x86_64-toolchain --noconfirm"
+          C:\msys64\msys2_shell.cmd -c "pacman -S mingw-w64-x86_64-make --noconfirm"
+      - name: Project configuration
+        run: |
+          $rmfp = "hocolatey", "iniconda", "trawberry"
+          foreach ($i in $rmfp) {
+            $env:path = ($env:path -split ";").Where({!($_ -like "*$i*")}) -join ";"
+          }
+          $env:Path="$env:Path;C:\msys64\mingw64\bin;"
+          .\waf.bat configure --googletest-bootstrap --googletest-build-tool=cmake --check-c-compiler=gcc --check-cxx-compiler=g++ --googletest-version ${{ matrix.googletestVersion }} --googletest-build-tool ${{ matrix.buildSystem }} --googletest-build-config ${{ matrix.buildConfiguration }} ${{ env.WAF_OPTS }}
+      - name: Project build
+        run: .\waf.bat build_bin ${{ env.WAF_OPTS }}
+      - name: Project test
+        run: |
+          $rmfp = "hocolatey", "iniconda", "trawberry"
+          foreach ($i in $rmfp) {
+            $env:path = ($env:path -split ";").Where({!($_ -like "*$i*")}) -join ";"
+          }
+          $env:Path="$env:Path;C:\msys64\mingw64\bin;"
+          .\waf.bat build_test ${{ env.WAF_OPTS }}
+      - name: Project waf *
+        run: |
+          .\waf.bat clean_bin ${{ env.WAF_OPTS }}
+          .\waf.bat clean_test ${{ env.WAF_OPTS }}
+          .\waf.bat distclean ${{ env.WAF_OPTS }}
+          .\waf.bat dist ${{ env.WAF_OPTS }}

@@ -11,6 +11,17 @@ def build(bld):
         if bld.env.CXX_NAME.lower() == "msvc":
             bld.env.append_unique("CFLAGS", ["/EHa"] + bld.env.CFLAGS_TESTBUILD)
             bld.env.append_unique("CXXFLAGS", ["/EHa"] + bld.env.CXXFLAGS_TESTBUILD)
+        elif bld.env.CXX_NAME.lower() == "gcc":
+            bld.env.append_unique(
+                "CFLAGS",
+                ["-ftest-coverage", "-fprofile-arcs"] + bld.env.CFLAGS_TESTBUILD,
+            )
+            bld.env.append_unique(
+                "CXXFLAGS",
+                ["-ftest-coverage", "-fprofile-arcs"] + bld.env.CXXFLAGS_TESTBUILD,
+            )
+            bld.env.append_unique("STLIB", ["gcov"])
+
     elif Utils.unversioned_sys_platform() == "linux":
         bld.env.append_unique(
             "CFLAGS", ["-ftest-coverage", "-fprofile-arcs"] + bld.env.CFLAGS_TESTBUILD

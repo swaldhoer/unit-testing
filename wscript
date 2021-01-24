@@ -217,13 +217,30 @@ def configure(cnf):
             cnf.start_msg("Build googletest using cmake")
             cmake_args = [".."]
             if Utils.unversioned_sys_platform() == "win32":
-                cmake_args.extend(
-                    [
-                        "-DCMAKE_GENERATOR_PLATFORM=x64",
-                        f"-DCMAKE_CONFIGURATION_TYPES={d.build_config}",
-                        "-DBUILD_GMOCK=ON",
-                    ]
-                )
+                if cnf.env.CXX_NAME == "msvc":
+                    cmake_args.extend(
+                        [
+                            "-DCMAKE_GENERATOR_PLATFORM=x64",
+                            f"-DCMAKE_CONFIGURATION_TYPES={d.build_config}",
+                            "-DBUILD_GMOCK=ON",
+                        ]
+                    )
+                elif cnf.env.CXX_NAME == "gcc":
+                    cmake_args.extend(
+                        [
+                            "-GMinGW Makefiles",
+                            # "-Dgtest_build_samples=ON",
+                            # "-Dgtest_build_tests=ON",
+                            # "-Dgmock_build_tests=ON",
+                            "-Dcxx_no_exception=OFF",
+                            "-Dcxx_no_rtti=OFF",
+                            "-DCMAKE_COMPILER_IS_GNUCXX=OFF",
+                            "-DCMAKE_CXX_FLAGS=-std=c++11 -Wdeprecated",
+                            f"-DCMAKE_BUILD_TYPE={d.build_config}",
+                            "-DBUILD_GMOCK=ON",
+                            "-DCMAKE_CXX_FLAGS=-Wa,-mbig-obj",
+                        ]
+                    )
             elif Utils.unversioned_sys_platform() == "linux":
                 cmake_args.extend(
                     [
@@ -252,14 +269,21 @@ def configure(cnf):
 
             cnf.start_msg("Building googletest")
             if Utils.unversioned_sys_platform() == "win32":
-                cnf.find_program("msbuild")
-                cwd = gtest_build_dir_abs
-                cmd = cnf.env.MSBUILD + [
-                    "googletest-distribution.sln",
-                    "/t:Build",
-                    f"/p:Configuration={d.build_config}",
-                    "/p:Platform=x64",
-                ]
+                if cnf.env.CXX_NAME == "msvc":
+                    cnf.find_program("msbuild")
+                    cwd = gtest_build_dir_abs
+                    cmd = cnf.env.MSBUILD + [
+                        "googletest-distribution.sln",
+                        "/t:Build",
+                        f"/p:Configuration={d.build_config}",
+                        "/p:Platform=x64",
+                    ]
+                elif cnf.env.CXX_NAME == "gcc":
+                    cnf.find_program("make", mandatory=False)
+                    if not cnf.env.MAKE:
+                        cnf.find_program("mingw32-make", var="MAKE", mandatory=True)
+                    cwd = gtest_build_dir_abs
+                    cmd = cnf.env.MAKE
             elif Utils.unversioned_sys_platform() == "linux":
                 cnf.find_program("make")
                 cwd = gtest_build_dir_abs
@@ -281,15 +305,21 @@ def configure(cnf):
                 d.gmock_lib_name = "gmock"
             d.gmock_include = os.path.join(d.source, "googlemock", "include")
             if Utils.unversioned_sys_platform() == "win32":
-                d.gtest_include = os.path.join(d.source, "googletest", "include")
-                d.gtest_lib_dir = os.path.join(
-                    gtest_build_dir_abs,
-                    "lib",
-                    d.build_config,
-                )
-                d.gmock_lib_dir = os.path.join(
-                    gtest_build_dir_abs, "lib", d.build_config
-                )
+                if cnf.env.CXX_NAME == "msvc":
+                    d.gtest_include = os.path.join(d.source, "googletest", "include")
+                    d.gtest_lib_dir = os.path.join(
+                        gtest_build_dir_abs,
+                        "lib",
+                        d.build_config,
+                    )
+                    d.gmock_lib_dir = os.path.join(
+                        gtest_build_dir_abs, "lib", d.build_config
+                    )
+                elif cnf.env.CXX_NAME == "gcc":
+                    d.gtest_include = os.path.join(d.source, "googletest", "include")
+                    d.gtest_lib_dir = os.path.join(gtest_build_dir_abs, "lib")
+                    d.gmock_lib_dir = os.path.join(gtest_build_dir_abs, "lib")
+
             elif Utils.unversioned_sys_platform() == "linux":
                 d.gtest_include = os.path.join(d.source, "googletest", "include")
                 d.gtest_lib_dir = os.path.join(gtest_build_dir_abs, "lib")
