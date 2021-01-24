@@ -28,4 +28,5 @@ def build(bld):
             f"{bld.env.APPNAME.lower()}-testrunner-gmock",
             f"{bld.env.APPNAME.lower()}-testrunner-gtest",
         ],
+        gcovr_excl=".*/tests/.*",
     )

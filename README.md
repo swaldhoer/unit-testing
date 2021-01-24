@@ -12,7 +12,7 @@
 1. Configure, build and test the project
 
    ```sh
-   waf configure --googletest-build
+   waf configure --googletest-bootstrap
    waf build_bin
    waf build_test
    ```

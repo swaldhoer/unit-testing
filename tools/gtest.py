@@ -46,18 +46,47 @@ def run_gcov(self):
             tg.post()
             inputs.extend(tg.link_task.inputs)
         tgt = []
+        bld_depth = self.bld.path.get_bld().path_from(self.bld.path)
+        pref_len = 1
+        if bld_depth != ".":
+            pref_len += bld_depth.count(os.sep)
         for i in inputs:
-            tgt_file = "^#^#" + i.parent.relpath().replace(os.sep, "#") + "#"
+            pref = "^#" * pref_len
+            tgt_file = pref + i.parent.relpath().replace(os.sep, "#") + "#"
             tgt_file += ".".join(i.name.split(".")[:-2]) + ".gcov"
             tgt.append(
                 self.path.find_or_declare(
-                    os.path.join(self.path.ctx.variant_dir, tgt_file)
+                    os.path.join(self.bld.path.get_bld().abspath(), tgt_file)
                 )
             )
-        gcovr_tgt = self.path.find_or_declare(
-            os.path.join(self.path.ctx.variant_dir, "index.html")
-        )
+        gcovr_out_base = "index"
+        gcovr_out_suffix = ".html"
+        gcovr_tgt = [
+            self.path.find_or_declare(
+                os.path.join(
+                    self.bld.bldnode.abspath(), gcovr_out_base + gcovr_out_suffix
+                )
+            )
+        ]
         self.gcov_task = self.create_task("Gcov", src=inputs, tgt=tgt)
+
+        excl = []
+        if hasattr(self, "gcovr_excl"):
+            tmp = Utils.to_list(self.gcovr_excl)
+            for i in tmp:
+                excl.append(i.replace(".*/", "").replace("/.*", "_"))
+
+        for i in self.gcov_task.outputs:
+            tgt = i.name.replace("^#", "")
+            tgt = (
+                gcovr_out_base
+                + "."
+                + tgt.replace("#", "_").replace(".gcov", gcovr_out_suffix)
+            )
+            tgt = os.path.join(self.bld.bldnode.abspath(), tgt)
+
+            if not any(i in tgt for i in excl):
+                gcovr_tgt.append(self.path.find_or_declare(tgt))
         self.create_task("Gcovr", src=self.gcov_task.outputs, tgt=gcovr_tgt)
 
 
@@ -66,29 +95,41 @@ class Gcovr(Task.Task):
     after = ["Gcov"]
 
     def run(self):
-        cmd = self.env.PYTHON + [
-            "-m",
-            "gcovr",
-            "--use-gcov-files",
-            "--html-details",
-            "--keep",
-            "--exclude=.*/tests/.*",
-            "--output",
-            self.outputs[0].abspath(),
-            "--root",
-            "../..",
-            ".",
-        ]
-        cwd = os.path.join(self.generator.bld.out_dir, self.generator.bld.variant)
+        excl = []
+        if hasattr(self.generator, "gcovr_excl"):
+            excl = Utils.to_list(self.generator.gcovr_excl)
+            excl = [f"--exclude={i}" for i in excl]
+        cmd = (
+            self.env.PYTHON
+            + [
+                "-m",
+                "gcovr",
+                "--use-gcov-files",
+                "--html-details",
+                "--keep",
+            ]
+            + excl
+            + [
+                "--output",
+                self.outputs[0].abspath(),
+                "--root",
+                self.generator.bld.path.abspath(),
+                self.generator.bld.bldnode.abspath(),
+            ]
+        )
         try:
             self.generator.bld.cmd_and_log(
-                cmd, cwd=cwd, quiet=Context.BOTH, output=Context.BOTH
+                cmd,
+                cwd=self.generator.bld.bldnode.abspath(),
+                quiet=Context.BOTH,
+                output=Context.BOTH,
             )
         except Errors.WafError as err:
             if hasattr(err, "stdout"):
                 print(err.stdout)
             if hasattr(err, "stderr"):
                 Logs.error(err.stderr)
+            self.generator.bld.fatal("Could not generate coverage report.")
 
 
 class Gcov(Task.Task):
@@ -98,18 +139,18 @@ class Gcov(Task.Task):
     def run(self):
         for i in self.inputs:
             cmd = self.env.GCOV + ["-p", i.abspath()]
-            cwd = os.path.join(self.generator.bld.out_dir, self.generator.bld.variant)
             try:
                 out, _ = self.generator.bld.cmd_and_log(
-                    cmd, cwd=cwd, quiet=Context.BOTH, output=Context.BOTH
+                    cmd,
+                    cwd=self.generator.bld.bldnode.abspath(),
+                    quiet=Context.BOTH,
+                    output=Context.BOTH,
                 )
             except Errors.WafError as err:
                 if hasattr(err, "stdout"):
                     print(err.stdout)
                 if hasattr(err, "stderr"):
                     Logs.error(err.stderr)
-            log = f"cwd: {cwd}\ncmd: {' '.join(cmd)}\nout: {out}"
-            self.inputs[0].parent.find_or_declare("gcov.out").write(log)
 
             # find files produced by gcov
             for line in out.splitlines():
