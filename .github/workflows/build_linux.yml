@@ -7,7 +7,7 @@ env:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     strategy:
       matrix:
         include:
@@ -35,6 +35,10 @@ jobs:
         uses: actions/setup-python@v1
         with:
           python-version: 3.8
+      - uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}-${{ matrix.buildSystem }}-${{ matrix.buildConfiguration }}-${{ matrix.googletestVersion }}
       - name: Install pip dependencies
         run: |
           python -m pip install --upgrade pip
@@ -47,12 +51,19 @@ jobs:
         if: matrix.buildSystem == 'bazel'
         with:
           version: 3.7.1
+      - name: "Restore googletest"
+        uses: actions/cache@v2
+        with:
+          path: ~/googletest
+          key: ${{ runner.os }}-googletest-${{ matrix.buildSystem }}-${{ matrix.buildConfiguration }}-${{ matrix.googletestVersion }}
       - name: Project configuration
         run: ./waf.sh configure --googletest-bootstrap --googletest-version ${{ matrix.googletestVersion }} --googletest-build-tool ${{ matrix.buildSystem }} --googletest-build-config ${{ matrix.buildConfiguration }} ${{ env.WAF_OPTS }}
       - name: Project build
         run: ./waf.sh build_bin ${{ env.WAF_OPTS }}
       - name: Project test
         run: ./waf.sh build_test ${{ env.WAF_OPTS }}
+      - name: Run clang-format
+        run: ./waf.sh clang-format --cf-arg --Werror --cf-arg --dry-run ${{ env.WAF_OPTS }}
       - name: Project waf *
         run: |
           ./waf.sh clean_bin ${{ env.WAF_OPTS }}

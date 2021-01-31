@@ -2,13 +2,46 @@ name: clang-format
 
 on: push
 
+env:
+  WAF_OPTS: -v -c yes
+
 jobs:
-  clang-format-check:
-    name: Check C/C++ sources by clang-format
+  build:
     runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        include:
+          - buildSystem: bazel
+            buildConfiguration: Release # configuration is ignored for bazel builds
+            googletestVersion: 93748a946684defd1494d5585dbc912e451e83f8
     steps:
       - uses: actions/checkout@v2
-      - name: Run clang-format
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.8
+      - uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}-clang-format
+      - name: Install pip dependencies
         run: |
-          sourceFiles=$( find . -path ./build -prune -false -o \( -name "*.h" -or -name "*.c" -or -name "*.cpp" -or -name "*.hpp" \) -type f )
-          echo $sourceFiles | xargs clang-format-10 --verbose --dry-run -Werror
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+      - uses: seanmiddleditch/gha-setup-ninja@v3
+        if: matrix.buildSystem == 'bazel'
+        with:
+          version: 1.10.2
+      - uses: abhinavsingh/setup-bazel@v3
+        if: matrix.buildSystem == 'bazel'
+        with:
+          version: 3.7.1
+      - name: "Restore googletest"
+        uses: actions/cache@v2
+        with:
+          path: ~/googletest
+          key: ${{ runner.os }}-googletest-${{ matrix.buildSystem }}-${{ matrix.buildConfiguration }}-${{ matrix.googletestVersion }}-clang-format
+      - name: Project configuration
+        run: ./waf.sh configure --googletest-bootstrap --googletest-version ${{ matrix.googletestVersion }} --googletest-build-tool ${{ matrix.buildSystem }} --googletest-build-config ${{ matrix.buildConfiguration }} ${{ env.WAF_OPTS }}
+      - name: Run clang-format
+        run: ./waf.sh clang-format --cf-arg --Werror --cf-arg --dry-run ${{ env.WAF_OPTS }}

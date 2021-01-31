@@ -72,6 +72,7 @@ def make_msvc_and_win_paths_absolute(self):
 
 
 def options(opt):
+    opt.load("clang_format")
     opt.load("waf_unit_test")
     opt.parser.remove_option("--top")
     opt.parser.remove_option("--out")
@@ -342,6 +343,7 @@ def configure(cnf):
 
     cnf.load("compiler_c compiler_cxx")
     cnf.load("gtest")
+    cnf.load("clang_format")
 
     if cnf.options.googletest_bootstrap:
         dep = bootstrap()
@@ -494,3 +496,16 @@ def build(bld):
         bld.recurse("src")
     elif bld.variant == "test":
         bld.recurse("tests")
+
+
+def clang_format(ctx):
+    excl = f"{ctx.bldnode.path_from(ctx.path)}/**"
+    ctx(
+        features="clang-format",
+        files=ctx.path.ant_glob("**/*.c", excl=excl, quite=True, remove=False),
+    )
+
+
+class FormatContext(BuildContext):
+    cmd = "clang-format"
+    fun = "clang_format"

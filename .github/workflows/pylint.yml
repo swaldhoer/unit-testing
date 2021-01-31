@@ -4,13 +4,17 @@ on: push
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python 3.8
         uses: actions/setup-python@v1
         with:
           python-version: 3.8
+      - uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}-pylint
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
@@ -22,5 +26,6 @@ jobs:
           python -m pylint --rcfile=pyproject.toml tests/gtest-test/wscript
           python -m pylint --rcfile=pyproject.toml tests/gmock-test/wscript
           python -m pylint --rcfile=pyproject.toml tests/wscript
+          python -m pylint --rcfile=pyproject.toml tools/clang_format.py
           python -m pylint --rcfile=pyproject.toml tools/gtest.py
           python -m pylint --rcfile=pyproject.toml wscript

@@ -16,3 +16,9 @@
    waf build_bin
    waf build_test
    ```
+
+1. Run clang-format on the project
+
+   ```sh
+   waf clang-format --cf-arg -i
+   ```
