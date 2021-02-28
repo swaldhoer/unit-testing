@@ -5,20 +5,20 @@
 1. Get the repository
 
    ```sh
-   git clone https://github.com/swaldhoer/unit-testing.git
-   cd unit-testing
+   $ git clone https://github.com/swaldhoer/unit-testing.git
+   $ cd unit-testing
    ```
 
 1. Configure, build and test the project
 
    ```sh
-   waf configure --googletest-bootstrap
-   waf build_bin
-   waf build_test
+   $ ./waf.sh configure --googletest-bootstrap
+   $ ./waf.sh build_bin
+   $ ./waf.sh build_test
    ```
 
 1. Run clang-format on the project
 
    ```sh
-   waf clang-format --cf-arg -i
+   $ ./waf.sh clang-format --cf-arg -i
    ```
