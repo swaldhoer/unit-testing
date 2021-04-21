@@ -1,4 +1,4 @@
 black==20.8b1
 gcovr==4.2
-GitPython==3.1.14
+GitPython==3.1.15
 pylint==2.7.4
