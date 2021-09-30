@@ -46,7 +46,11 @@ def configure(cnf):
         quiet=Context.BOTH,
         output=Context.BOTH,
     )
-    version = out.decode("utf-8").split()[1].split(".")
+    try:
+        out = out.decode("utf-8")
+    except AttributeError:
+        pass
+    version = out.split()[1].split(".")
     cnf.env.GCOVR_VERSION = tuple(version)
 
 
