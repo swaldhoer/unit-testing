@@ -41,17 +41,18 @@ def configure(cnf):
         cnf.find_program("python3", var="PYTHON")
         cnf.find_program("gcov", var="GCOV")
         cnf.find_program("gcovr", var="GCOVR")
-    out, _ = cnf.cmd_and_log(
-        [Utils.subst_vars("${GCOVR}", cnf.env), "--version"],
-        quiet=Context.BOTH,
-        output=Context.BOTH,
-    )
-    try:
-        out = out.decode("utf-8")
-    except AttributeError:
-        pass
-    version = out.split()[1].split(".")
-    cnf.env.GCOVR_VERSION = tuple(version)
+    if cnf.env.GCOVR:
+        out, _ = cnf.cmd_and_log(
+            [Utils.subst_vars("${GCOVR}", cnf.env), "--version"],
+            quiet=Context.BOTH,
+            output=Context.BOTH,
+        )
+        try:
+            out = out.decode("utf-8")
+        except AttributeError:
+            pass
+        version = out.split()[1].split(".")
+        cnf.env.GCOVR_VERSION = tuple(version)
 
 
 @feature("gcov_gcovr")
