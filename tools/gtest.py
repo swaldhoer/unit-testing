@@ -36,7 +36,7 @@ def configure(cnf):
             pass
         elif cnf.env.CXX_NAME.lower() == "gcc":
             cnf.find_program("gcov", var="GCOV")
-            # cnf.find_program("gcovr", var="GCOVR")
+            cnf.find_program("gcovr", var="GCOVR")
     elif Utils.unversioned_sys_platform() == "linux":
         cnf.find_program("python3", var="PYTHON")
         cnf.find_program("gcov", var="GCOV")
@@ -88,7 +88,7 @@ def run_gcov(self):
                 os.path.join(self.bld.bldnode.abspath(), gcovr_out_base + ".html")
             )
         ]
-        ver = tuple([int(i) for i in self.env.GCOVR_VERSION])
+        ver = tuple(int(i) for i in self.env.GCOVR_VERSION)
         for i in self.gcov_task.outputs:
             found = False
             for j in excl:
@@ -100,11 +100,11 @@ def run_gcov(self):
                 tgt_for_hash = (
                     i.name.replace("^#", "").replace("#", "/").rsplit(".gcov")[0]
                 )
-                h = hashlib.md5(tgt_for_hash.encode("utf-8")).hexdigest()
-                gcovr_out_suffix = f".{h}.html"
+                hfile_name_hash = hashlib.md5(tgt_for_hash.encode("utf-8")).hexdigest()
+                gcovr_out_suffix = f".{hfile_name_hash}.html"
                 tgt = i.name.replace("^#", "")
-                kk = tgt.rsplit("#")[-1].replace(".gcov", gcovr_out_suffix)
-                tgt = gcovr_out_base + "." + kk
+                tgt_file_name = tgt.rsplit("#")[-1].replace(".gcov", gcovr_out_suffix)
+                tgt = gcovr_out_base + "." + tgt_file_name
             else:
                 tgt = i.name.replace("^#", "")
                 tgt = (
