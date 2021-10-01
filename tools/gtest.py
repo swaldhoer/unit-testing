@@ -2,6 +2,7 @@
 
 import os
 import re
+import hashlib
 
 
 from waflib.TaskGen import feature
@@ -35,11 +36,23 @@ def configure(cnf):
             pass
         elif cnf.env.CXX_NAME.lower() == "gcc":
             cnf.find_program("gcov", var="GCOV")
-            # cnf.find_program("gcovr", var="GCOVR")
+            cnf.find_program("gcovr", var="GCOVR")
     elif Utils.unversioned_sys_platform() == "linux":
         cnf.find_program("python3", var="PYTHON")
         cnf.find_program("gcov", var="GCOV")
         cnf.find_program("gcovr", var="GCOVR")
+    if cnf.env.GCOVR:
+        out, _ = cnf.cmd_and_log(
+            [Utils.subst_vars("${GCOVR}", cnf.env), "--version"],
+            quiet=Context.BOTH,
+            output=Context.BOTH,
+        )
+        try:
+            out = out.decode("utf-8")
+        except AttributeError:
+            pass
+        version = out.split()[1].split(".")
+        cnf.env.GCOVR_VERSION = tuple(version)
 
 
 @feature("gcov_gcovr")
@@ -64,30 +77,43 @@ def run_gcov(self):
                     os.path.join(self.bld.path.get_bld().abspath(), tgt_file)
                 )
             )
-        gcovr_out_base = "index"
-        gcovr_out_suffix = ".html"
-        gcovr_tgt = [
-            self.path.find_or_declare(
-                os.path.join(
-                    self.bld.bldnode.abspath(), gcovr_out_base + gcovr_out_suffix
-                )
-            )
-        ]
         self.gcov_task = self.create_task("Gcov", src=inputs, tgt=tgt)
 
         excl = []
         if hasattr(self, "gcovr_excl"):
-            tmp = Utils.to_list(self.gcovr_excl)
-            for i in tmp:
-                excl.append(i.replace(".*/", "").replace("/.*", "_"))
+            excl.extend(Utils.to_list(self.gcovr_excl))
 
-        for i in self.gcov_task.outputs:
-            tgt = i.name.replace("^#", "")
-            tgt = (
-                gcovr_out_base
-                + "."
-                + tgt.replace("#", "_").replace(".gcov", gcovr_out_suffix)
+        gcovr_out_base = "index"
+        gcovr_tgt = [
+            self.path.find_or_declare(
+                os.path.join(self.bld.bldnode.abspath(), gcovr_out_base + ".html")
             )
+        ]
+        ver = tuple(int(i) for i in self.env.GCOVR_VERSION)
+        for i in self.gcov_task.outputs:
+            found = False
+            for j in excl:
+                if re.search(j, i.abspath().replace("#", os.sep)):
+                    found = True
+            if found:
+                continue
+            if ver >= (5, 0):
+                tgt_for_hash = (
+                    i.name.replace("^#", "").replace("#", "/").rsplit(".gcov")[0]
+                )
+                hfile_name_hash = hashlib.md5(tgt_for_hash.encode("utf-8")).hexdigest()
+                gcovr_out_suffix = f".{hfile_name_hash}.html"
+                tgt = i.name.replace("^#", "")
+                tgt_file_name = tgt.rsplit("#")[-1].replace(".gcov", gcovr_out_suffix)
+                tgt = gcovr_out_base + "." + tgt_file_name
+            else:
+                tgt = i.name.replace("^#", "")
+                tgt = (
+                    gcovr_out_base
+                    + "."
+                    + tgt.replace("#", "_").replace(".gcov", ".html")
+                )
+
             tgt = os.path.join(self.bld.bldnode.abspath(), tgt)
 
             if not any(i in tgt for i in excl):

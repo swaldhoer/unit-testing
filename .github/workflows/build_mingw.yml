@@ -46,7 +46,7 @@ jobs:
             $env:path = ($env:path -split ";").Where({!($_ -like "*$i*")}) -join ";"
           }
           $env:Path="$env:Path;C:\msys64\mingw64\bin;"
-          .\waf.bat configure --googletest-bootstrap --googletest-build-tool=cmake --check-c-compiler=gcc --check-cxx-compiler=g++ --googletest-version ${{ matrix.googletestVersion }} --googletest-build-tool ${{ matrix.buildSystem }} --googletest-build-config ${{ matrix.buildConfiguration }} ${{ env.WAF_OPTS }}
+          .\waf.bat configure --googletest-bootstrap --check-c-compiler=gcc --check-cxx-compiler=g++ --googletest-version ${{ matrix.googletestVersion }} --googletest-build-tool ${{ matrix.buildSystem }} --googletest-build-config ${{ matrix.buildConfiguration }} ${{ env.WAF_OPTS }}
       - name: Project build
         run: .\waf.bat build_bin ${{ env.WAF_OPTS }}
       - name: Project test

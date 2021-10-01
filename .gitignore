@@ -19,3 +19,5 @@ tools/.waf3-*.*.*-*
 *.diff
 *.patch
 *.rej
+
+*.exe
